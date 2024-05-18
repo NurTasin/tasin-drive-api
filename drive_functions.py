@@ -64,8 +64,14 @@ def getFolderContents(folder_uid,benchmark=False):
     benchmark_data['pull_data']+=time.time()-start
     regex_start = time.time()
     folder_data = re.findall("window\['_DRIVE_ivd'\] = '(.*)'",response.text)
-    title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
-    author = re.findall("(([a-z0-9A-Z\.]*)@gmail\.com)",response.text)[0][0]
+    try:
+        title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
+    except IndexError:
+        title = None
+    try:
+        author = re.findall("(([a-z0-9A-Z\.]*)@gmail\.com)",response.text)[0][0]
+    except IndexError:
+        author = None
     folder_data = folder_data[0][0:folder_data[0].find("'")]
     raw_data = bytes(f"{folder_data}",'utf-8').decode('unicode-escape').encode().decode('unicode-escape')
     benchmark_data['regex']+=time.time()-regex_start
@@ -117,8 +123,14 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
     benchmark_data['pull_data']+=time.time()-start
     regex_start = time.time()
     folder_data = re.findall("window\['_DRIVE_ivd'\] = '(.*)'",response.text)
-    title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
-    author = re.findall("(([a-z0-9A-Z\.]*)@gmail\.com)",response.text)[0][0]
+    try:
+        title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
+    except IndexError:
+        title = None
+    try:
+        author = re.findall("(([a-z0-9A-Z\.]*)@gmail\.com)",response.text)[0][0]
+    except IndexError:
+        author = None
     folder_data = folder_data[0][0:folder_data[0].find("'")]
     raw_data = bytes(f"{folder_data}",'utf-8').decode('unicode-escape').encode().decode('unicode-escape')
     benchmark_data['regex']+=time.time()-regex_start
