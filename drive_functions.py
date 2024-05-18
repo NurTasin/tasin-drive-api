@@ -67,6 +67,7 @@ def getFolderContents(folder_uid,benchmark=False):
     try:
         title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
     except IndexError:
+        print(response.text)
         title = None
     try:
         author = re.findall("(([a-z0-9A-Z\.]*)@gmail\.com)",response.text)[0][0]
@@ -126,6 +127,7 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
     try:
         title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
     except IndexError:
+        print(response.text)
         title = None
     try:
         author = re.findall("(([a-z0-9A-Z\.]*)@gmail\.com)",response.text)[0][0]
