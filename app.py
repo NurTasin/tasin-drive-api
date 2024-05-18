@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from drive_functions import countPages,getFolderContents,countPagesAllPDF_Folder
 
 app = FastAPI(title="Tasin's Unofficial Drive API",
-              summary="This API is created as a SaaS for parsing Google Drive's Webapp to get details about the destined file or folder",
+              summary="""This API is created as a SaaS for parsing Google Drive's Webapp to get details about the destined file or folder""",
+              description="""[Contribute on Github](https://github.com/NurTasin/tasin-drive-api)""",
               version="1.0.0(alpha)",
               docs_url="/",
               contact={
@@ -13,7 +14,7 @@ app = FastAPI(title="Tasin's Unofficial Drive API",
                   "email":"bigtdevs@gmail.com"
               })
 
-@app.get("/countPdfPages/{file_uid}",
+@app.get("/api/v1/countPdfPages/{file_uid}",
          name="Count PDF Page",
          description="Counts pages from a file ID of a pdf file.",
          response_description="""Response Structure looks like this
@@ -29,7 +30,7 @@ app = FastAPI(title="Tasin's Unofficial Drive API",
 def serveFileDetails(file_uid:str):
     return countPages(file_uid=file_uid)
 
-@app.get("/getFolderContents/{folder_uid}",
+@app.get("/api/v1/getFolderContents/{folder_uid}",
          name="get Folder Contents",
          description="Responds with the contents (file,folder) from a publicly shared Drive Folder",
          response_description="""This endpoint responds like
