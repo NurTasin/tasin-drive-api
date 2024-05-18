@@ -18,6 +18,9 @@ def countPages(file_uid):
     metadata = req.get(meta_url)
     title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
     return {
+        "success":True,
+        "msg":"Success",
+        "err":"NO_ERROR_ERROR",
         "filename": title,
         "pages": json.loads(metadata.text[4::])['pages'],
         "mimetype": mime
