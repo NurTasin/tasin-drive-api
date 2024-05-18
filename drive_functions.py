@@ -7,12 +7,16 @@ def countPages(file_uid):
     response = req.get(f"https://drive.google.com/file/d/{file_uid}/view",headers={
         "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     })
+    if response.status_code == 401:
+        return {"success":False,"msg":"File is not publicly shared!","err":"FILE_NOT_ACCESSIBLE"}
     # print(response.text)
+    mime = re.findall("\"docs-dm\":\"(.*)\",\"docs-sd",response.text)[0]
+    if not mime=="application/pdf":
+        return {"success":False,"msg":"Provided file is not a pdf file","err":"NOT_A_PDF"}
     uri = re.findall("(https:\/\/drive\.google\.com\/viewer[0-9]\/prod-[0-9][0-9]\/meta\?(.*))",response.text)
     meta_url = uri[0][0][0:uri[0][0].find("\"")].encode('utf-8').decode('unicode-escape')
     metadata = req.get(meta_url)
     title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
-    mime = re.findall("\"docs-dm\":\"(.*)\",\"docs-sd",response.text)[0]
     return {
         "filename": title,
         "pages": json.loads(metadata.text[4::])['pages'],
@@ -61,6 +65,8 @@ def getFolderContents(folder_uid,benchmark=False):
     response = req.get(f"https://drive.google.com/drive/folders/{folder_uid}",headers={
         "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     })
+    if "Google Drive: Sign-in" in response.text:
+        return {"success":False,"msg":"Provided Folder is not publicly shared","err":"FOLDER_NOT_ACCESSIBLE"}
     benchmark_data['pull_data']+=time.time()-start
     regex_start = time.time()
     folder_data = re.findall("window\['_DRIVE_ivd'\] = '(.*)'",response.text)
@@ -97,6 +103,9 @@ def getFolderContents(folder_uid,benchmark=False):
         })
     benchmark_data['processing']+=time.time()-processing_start
     res= {
+        "success":True,
+        "msg":"Success",
+        "err":"NO_ERROR_ERROR",
         "name": title,
         "author": author,
         "totalContent":len(data_processed),
@@ -121,6 +130,8 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
     response = req.get(f"https://drive.google.com/drive/folders/{folder_uid}",headers={
         "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     })
+    if "Google Drive: Sign-in" in response.text:
+        return {"suceess":False,"msg":"Provided folder is not publicly shared","err":"FOLDER_NOT_ACCESSIBLE"}
     benchmark_data['pull_data']+=time.time()-start
     regex_start = time.time()
     folder_data = re.findall("window\['_DRIVE_ivd'\] = '(.*)'",response.text)
@@ -185,6 +196,9 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
             })
     benchmark_data['processing']+=time.time()-processing_start
     res= {
+        "success": True,
+        "msg": "Success",
+        "err": "NO_ERROR_ERROR",
         "name": title,
         "author": author,
         "totalContent":len(data_processed),
@@ -197,8 +211,8 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
     return res
 
 if __name__ == "__main__":
-    pages = countPages("1wo1BSBNKfLDhDBF4ZHIigkQQQfm3pxg3")
-    print(pages)
+    # pages = countPages("1wo1BSBNKfLDhDBF4ZHIigkQQQfm3pxg3")
+    # print(pages)
     
-    contents = getFolderContents("1m5hEx_qbZXwgLutW8CoioLNFuvu8kFHw")
+    contents = getFolderContents("1mURYosXIDbqSzDYlnlqRtoKJzbv1KJ5J")
     print(json.dumps(contents,indent=2,ensure_ascii=False))
