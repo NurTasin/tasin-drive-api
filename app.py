@@ -72,3 +72,17 @@ def serveFolderDetails(folder_uid:str, depth: Union[int,None]=1, benchmark: Unio
     if count_pdf_pages:
         return {"response":countPagesAllPDF_Folder(folder_uid,benchmark=benchmark,cache=cache),"depth":depth}
     return {"response":getFolderContents(folder_uid,benchmark=benchmark,cache=cache),"depth":depth}
+
+
+
+@app.get("/api/v1/wakeUp",
+         name="WakeUp Call",
+         summary="Wakes up the server from sleep",
+         description="""This API was designed to be deployed on [render.com](https://render.com/)'s Free Plan
+In their free plan, apps are put into sleep after sometime of inactivity.
+It might take upto 50seconds to re-active the app. This could be a massive bottleneck
+That's why it is recommended that before makig any othe API call, make this `wakeUp call`.
+maybe do it in the `preload phase` of your document. This will ensure better experience for the Users
+Maybe also add an  query `rand` and set a random value every call. So that the browser doesn't cache that request""")
+def wakeUp(rand:Union[int,float,None]=None):
+    return {"success":True,"msg":"I am running now","err":"NO_ERROR_ERROR"}
