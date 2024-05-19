@@ -2,8 +2,15 @@ import requests as req
 import re
 import json
 import time
+from database_handler import addToFileCache,addToFolderCache, findFromFolderCache,findFromFileCache
 
-def countPages(file_uid):
+def countPages(file_uid,cache=False):
+    if cache:
+        cached_data = findFromFileCache(f"{file_uid}:full")
+        if cached_data:
+            cached_data["response"]["fromCache"] = True
+            return cached_data["response"]
+    
     response = req.get(f"https://drive.google.com/file/d/{file_uid}/view",headers={
         "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     })
@@ -17,7 +24,7 @@ def countPages(file_uid):
     meta_url = uri[0][0][0:uri[0][0].find("\"")].encode('utf-8').decode('unicode-escape')
     metadata = req.get(meta_url)
     title = re.findall("\<title\>(.*) - (.*)\<\/title\>",response.text)[0][0]
-    return {
+    res = {
         "success":True,
         "msg":"Success",
         "err":"NO_ERROR_ERROR",
@@ -25,15 +32,24 @@ def countPages(file_uid):
         "pages": json.loads(metadata.text[4::])['pages'],
         "mimetype": mime
     }
+    if cache:
+        addToFileCache(f"{file_uid}:full",res)
+        res["savedToCache"] = True
+    return res
 
 
-def countPages_light(file_uid,benchmark=False):
+def countPages_light(file_uid,benchmark=False,cache=False):
     benchmark_data={
         "pull_data": 0,
         "processing": 0,
         "regex": 0,
         "total": 0
     }
+    if cache:
+        cached_data = findFromFileCache(file_uid)
+        if cached_data:
+            cached_data["response"]["fromCache"] = True
+            return cached_data["response"]
     pull_1_start = time.time()
     response = req.get(f"https://drive.google.com/file/d/{file_uid}/view",headers={
         "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -53,11 +69,19 @@ def countPages_light(file_uid,benchmark=False):
     res = {
         "pages": json.loads(metadata.text[4::])['pages']
     }
+    if cache:
+        addToFileCache(file_uid,res)
+        res["savedToCache"] = True
     if benchmark:
         res["benchmark"]=benchmark_data
     return res
 
-def getFolderContents(folder_uid,benchmark=False):
+def getFolderContents(folder_uid,benchmark=False,cache=False):
+    if cache:
+        cached_data = findFromFolderCache(f"{folder_uid}:nopagecount")
+        if cached_data:
+            cached_data["response"]["fromCache"] = True
+            return cached_data["response"]
     benchmark_data={
         "pull_data": 0,
         "regex": 0,
@@ -114,13 +138,21 @@ def getFolderContents(folder_uid,benchmark=False):
         "totalContent":len(data_processed),
         "contents":data_processed
     }
+    if cache:
+        addToFolderCache(f"{folder_uid}:nopagecount",res)
+        res["savedToCache"] = True
     if benchmark:
         benchmark_data["total"] = time.time()-start
         res['benchmark']=benchmark_data
     return res
 
 
-def countPagesAllPDF_Folder(folder_uid,benchmark=False):
+def countPagesAllPDF_Folder(folder_uid,benchmark=False,cache=False):
+    if cache:
+        cached_data = findFromFolderCache(f"{folder_uid}:pagecount")
+        if cached_data:
+            cached_data["response"]["fromCache"] = True
+            return cached_data["response"]
     benchmark_data={
         "pull_data": 0,
         "regex": 0,
@@ -164,12 +196,9 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
                 break
         if i[2]=="application/pdf":
             pagecount_start = time.time()
-            page_count_inf = countPages_light(i[0],benchmark=True)
+            page_count_inf = countPages_light(i[0],cache=True)
             benchmark_data["page_count"]+=time.time() - pagecount_start
             total_page+=page_count_inf["pages"]
-            benchmark_data["pull_data"]+=page_count_inf["benchmark"]["pull_data"]
-            benchmark_data["regex"]+=page_count_inf["benchmark"]["regex"]
-            benchmark_data["processing"]+=page_count_inf["benchmark"]["processing"]
             if benchmark:
                 data_processed.append({
                     "uid": i[0],
@@ -177,8 +206,7 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
                     "mimetype": i[2],
                     "link": i[-4],
                     "size":i[9],
-                    "pages": page_count_inf["pages"],
-                    "benchmark":page_count_inf["benchmark"]
+                    "pages": page_count_inf["pages"]
                 })
             else:
                 data_processed.append({
@@ -208,6 +236,9 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
         "contents":data_processed,
         "totalPages":total_page
     }
+    if cache:
+        addToFolderCache(f"{folder_uid}:pagecount",res)
+        res["savedToCache"] = True
     if benchmark:
         benchmark_data["total"] = time.time()-start
         res['benchmark']=benchmark_data
@@ -216,6 +247,7 @@ def countPagesAllPDF_Folder(folder_uid,benchmark=False):
 if __name__ == "__main__":
     # pages = countPages("1wo1BSBNKfLDhDBF4ZHIigkQQQfm3pxg3")
     # print(pages)
-    
-    contents = getFolderContents("1mURYosXIDbqSzDYlnlqRtoKJzbv1KJ5J")
+    s = time.time()
+    contents = countPagesAllPDF_Folder("1kYLt43RCB5lePVtFgk9nvQpoTotU5n3t",cache=True)
+    print(time.time() - s)
     print(json.dumps(contents,indent=2,ensure_ascii=False))

@@ -27,8 +27,8 @@ app = FastAPI(title="Tasin's Unofficial Drive API",
     "pages": 69, //Page count of that file
     "mimetype":"application/pdf" // MIME Type of the file
 }""")
-def serveFileDetails(file_uid:str):
-    return countPages(file_uid=file_uid)
+def serveFileDetails(file_uid:str,cache:Union[None,bool] = False):
+    return countPages(file_uid=file_uid,cache=True)
 
 @app.get("/api/v1/getFolderContents/{folder_uid}",
          name="get Folder Contents",
@@ -68,7 +68,7 @@ def serveFileDetails(file_uid:str):
     }
 }
 ```""")
-def serveFolderDetails(folder_uid:str, depth: Union[int,None]=1, benchmark: Union[bool,None]=False, count_pdf_pages: Union[bool,None]=False):
+def serveFolderDetails(folder_uid:str, depth: Union[int,None]=1, benchmark: Union[bool,None]=False, count_pdf_pages: Union[bool,None]=False,cache: Union[bool,None] = True):
     if count_pdf_pages:
-        return {"response":countPagesAllPDF_Folder(folder_uid,benchmark),"depth":depth}
-    return {"response":getFolderContents(folder_uid,benchmark),"depth":depth}
+        return {"response":countPagesAllPDF_Folder(folder_uid,benchmark=benchmark,cache=cache),"depth":depth}
+    return {"response":getFolderContents(folder_uid,benchmark=benchmark,cache=cache),"depth":depth}
